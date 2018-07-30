@@ -1,7 +1,7 @@
-import React from 'react'
+import React, {Component} from 'react'
 import ReactCrop, { makeAspectCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { Button, Icon, message, Row, Col } from 'antd';
+import { Icon, message, Row, Col } from 'antd';
 import ZoomSlider from './zoomSlider';
 
 import './index.css'
@@ -19,15 +19,14 @@ function beforeUpload(file) {
     return isJPG && isLt2M;
   }
 
-class UploadModal extends React.Component {
+class UploadModal extends Component {
   state = {
     loading: false,
     src: null,
     crop: {
-      x: 0,
-      y: 0,
-      width: 90,
-      height: 90,
+      x: 10,
+      y: 10,
+      width: 80,
       aspect: 9/5
     },
   }
@@ -48,7 +47,14 @@ class UploadModal extends React.Component {
   }
 
   onImageLoaded = image => {
-    console.log('onCropComplete', image)
+    this.setState({
+        crop: makeAspectCrop({
+          x: 10,
+          y: 10,
+          aspect: 9/5,
+          width: 80,
+        }, image.width / image.height),
+      });
   }
 
   onCropComplete = crop => {
@@ -59,9 +65,13 @@ class UploadModal extends React.Component {
     this.setState({ crop })
   }
 
+  deletePhoto() {
+    this.setState({ src : null })
+  }
+
   render() {
     return (
-      <div className="UploadModal" type="flex" justify="center" flexDirection="column">
+      <div className="UploadModal">
         <Row type="flex" justify="center" align="middle" style={{height:308, backgroundColor:'#7C7C7C', margin: -24}}>
             {this.state.src && (
                 <ReactCrop
@@ -69,14 +79,14 @@ class UploadModal extends React.Component {
                     crop={this.state.crop}
                     onImageLoaded={this.onImageLoaded}
                     onComplete={this.onCropComplete}
-                    onCropChange={this.onCropChange}
+                    onChange={this.onCropChange}
                 />
             )}
             
             {!this.state.src && (
                 <Col span={14} style={{height:308, backgroundColor:'white'}}>
                     <Row type="flex" justify="center" align="middle">
-                    <label class="custom-file-upload" style={{cursor: 'pointer'}}>
+                    <label style={{cursor: 'pointer'}}>
                         <input type="file" onChange={this.onSelectFile} style={{display:'none'}}/>
                         <Icon type= "camera" /> 
                         <p> Upload Photo </p>
