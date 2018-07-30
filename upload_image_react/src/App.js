@@ -49,7 +49,7 @@ class App extends React.Component {
           okText='Submit'
           width={665}
         >
-          <div style={{height: 308}}>
+          <div style={{height: 340}}>
             <UploadModal />
           </div>
         </Modal>
