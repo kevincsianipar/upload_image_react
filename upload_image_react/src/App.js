@@ -7,7 +7,6 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.child = React.createRef();
-    this.handler = this.handler.bind(this);
     this.state = {
       src: null,
       visible: false,
@@ -23,6 +22,7 @@ class App extends React.Component {
 
   handleOk = () => {
     this.setState({
+      src: 'hai',
       visible: false,
     });
   }
@@ -50,6 +50,10 @@ class App extends React.Component {
     return (
       <div>
         {!this.state.src && (<Button type="ghost" onClick={this.showModal} style={{color:'#00A5CF', border:'none'}}>Add Photo</Button>)}
+        {this.state.src && (
+        <Button type="ghost" onClick={this.showModal} style={{color:'#00A5CF', width:120, height:66}}>
+          <img src={this.state.src} alt="uploaded"/>
+        </Button>)}
         <Modal title="W:H 9:5 Photo"
           visible={visible}
           onOk={this.handleOk}

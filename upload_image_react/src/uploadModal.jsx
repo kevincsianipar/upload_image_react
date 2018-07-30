@@ -7,7 +7,6 @@ import ZoomSlider from './zoomSlider';
 import './index.css'
 
 function beforeUpload(file) {
-    console.log(file);
     const isJPG = file.type === 'image/jpeg';
     if (!isJPG) {
       message.error('You can only upload JPG file!');
@@ -19,17 +18,44 @@ function beforeUpload(file) {
     return isJPG && isLt2M;
   }
 
+function getCroppedImg(canvasRef, image64, pixelCrop) {
+    const canvas = canvasRef//document.createElement('canvas');
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+    const ctx = canvas.getContext('2d');
+    const image = new Image();
+    image.src = image64;
+    image.onload = function() {
+        ctx.drawImage(
+            image,
+            pixelCrop.x,
+            pixelCrop.y,
+            pixelCrop.width,
+            pixelCrop.height,
+            0,
+            0,
+            pixelCrop.width,
+            pixelCrop.height
+          );
+    }
+}
+
 class UploadModal extends Component {
-  state = {
-    loading: false,
-    src: null,
-    crop: {
-      x: 10,
-      y: 10,
-      width: 80,
-      aspect: 9/5
-    },
-  }
+    constructor(props) {
+        super(props);
+        this.imagePreviewCanvasRef = React.createRef();
+        this.state = {
+            cropped: false,
+            loading: false,
+            src: null,
+            crop: {
+            x: 10,
+            y: 10,
+            width: 80,
+            aspect: 9/5
+            },
+        }
+    }
 
   onSelectFile = (e) => {
     if (e.target.files && e.target.files.length > 0 && beforeUpload(e.target.files[0])) {
@@ -57,8 +83,10 @@ class UploadModal extends Component {
       });
   }
 
-  onCropComplete = crop => {
-    console.log('onCropComplete', crop)
+  onCropComplete = (crop,pixelCrop) => {
+    const canvasRef = this.imagePreviewCanvasRef.current;
+    const imgSrc = this.state.src;
+    getCroppedImg(canvasRef, imgSrc, pixelCrop);
   }
 
   onCropChange = crop => {
@@ -80,13 +108,15 @@ class UploadModal extends Component {
                     onImageLoaded={this.onImageLoaded}
                     onComplete={this.onCropComplete}
                     onChange={this.onCropChange}
+                    minHeight={40}
+                    minWidth={36}
                 />
             )}
             
             {!this.state.src && (
                 <Col span={14} style={{height:308, backgroundColor:'white'}}>
                     <Row type="flex" justify="center" align="middle">
-                    <label style={{cursor: 'pointer'}}>
+                    <label style={{cursor: 'pointer', textAlign: 'center', marginTop: 130}}>
                         <input type="file" onChange={this.onSelectFile} style={{display:'none'}}/>
                         <Icon type= "camera" /> 
                         <p> Upload Photo </p>
@@ -95,6 +125,7 @@ class UploadModal extends Component {
                 </Col>
             )
             }
+            <canvas ref={this.imagePreviewCanvasRef}></canvas>
         </Row>
         <Row type="flex" justify="space-around" align="bottom" style={{marginTop:28}}>
             <Col span={10}>
