@@ -1,8 +1,9 @@
 import React, {Component} from 'react'
 import ReactCrop, { makeAspectCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
-import { Icon, message, Row, Col } from 'antd';
+import { Icon, message, Row, Col, Button } from 'antd';
 import ZoomSlider from './zoomSlider';
+import {extractImageFileExtensionFromBase64, base64StringtoFile} from './util';
 
 import './index.css'
 
@@ -45,14 +46,14 @@ class UploadModal extends Component {
         super(props);
         this.imagePreviewCanvasRef = React.createRef();
         this.state = {
-            cropped: false,
+            preview: false,
             loading: false,
             src: null,
             crop: {
             x: 10,
             y: 10,
             width: 80,
-            aspect: 9/5
+            aspect: 9/5,
             },
         }
     }
@@ -83,10 +84,27 @@ class UploadModal extends Component {
       });
   }
 
-  onCropComplete = (crop,pixelCrop) => {
+  onCropComplete = (crop, pixelCrop) => {
     const canvasRef = this.imagePreviewCanvasRef.current;
     const imgSrc = this.state.src;
     getCroppedImg(canvasRef, imgSrc, pixelCrop);
+  }
+
+  onPreview = (event) => {
+    event.preventDefault();
+    this.setState({ preview : true })
+  }
+
+  onSubmit() {
+    const canvasRef = this.imagePreviewCanvasRef.current;
+    const imgSrc = this.state.src;
+    const fileExt = extractImageFileExtensionFromBase64(imgSrc);
+    const imgData = canvasRef.toDataURL('image/' + fileExt);
+    const newFileName = "preview." + fileExt;
+    const newCroppedFile = base64StringtoFile(imgData, newFileName);
+    this.props.passingImage(newCroppedFile,imgData);
+    console.log(newCroppedFile,imgData);
+    this.setState({ imgSrc : newCroppedFile, preview : true });
   }
 
   onCropChange = crop => {
@@ -94,25 +112,28 @@ class UploadModal extends Component {
   }
 
   deletePhoto() {
-    this.setState({ src : null })
+    this.setState({ 
+      src : null,
+      preview : false, 
+    })
   }
 
   render() {
     return (
       <div className="UploadModal">
         <Row type="flex" justify="center" align="middle" style={{height:308, backgroundColor:'#7C7C7C', margin: -24}}>
-            {this.state.src && (
+            {this.state.src && !this.state.preview &&(
                 <ReactCrop
                     src={this.state.src}
                     crop={this.state.crop}
                     onImageLoaded={this.onImageLoaded}
-                    onComplete={this.onCropComplete}
                     onChange={this.onCropChange}
+                    onComplete={this.onCropComplete}
                     minHeight={40}
                     minWidth={36}
+                    style={{display: this.state.preview === true ? 'none' : 'block'}}
                 />
             )}
-            
             {!this.state.src && (
                 <Col span={14} style={{height:308, backgroundColor:'white'}}>
                     <Row type="flex" justify="center" align="middle">
@@ -125,27 +146,25 @@ class UploadModal extends Component {
                 </Col>
             )
             }
-            <canvas ref={this.imagePreviewCanvasRef}></canvas>
+            <canvas ref={this.imagePreviewCanvasRef} style={{height:'100%', display: this.state.preview === false ? 'none' : 'block'}}></canvas>
         </Row>
         <Row type="flex" justify="space-around" align="bottom" style={{marginTop:28}}>
-            <Col span={10}>
+            <Col span={9}>
                 <label style={{marginLeft:6}}> Zoom </label>
                 <ZoomSlider />
             </Col>
-            <Col span={1}>
-            </Col>
-            <Col span={10}>
+            <Col span={9}>
                 <label style={{marginLeft:6}}> Straighten </label>
                 <ZoomSlider />
             </Col>
-            <Col span={2}>
-            </Col>
-            <Col span={1}>
+            <Col span={3}>
                 <Icon type="enter" />
+            </Col>
+            <Col span={3}>
+              <Button key="preview" onClick={this.onPreview}>Preview</Button>
             </Col>
         </Row>
       </div>
-
     )
   }
 }

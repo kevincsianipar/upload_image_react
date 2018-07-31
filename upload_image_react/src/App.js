@@ -8,7 +8,8 @@ class App extends React.Component {
     super(props);
     this.child = React.createRef();
     this.state = {
-      src: null,
+      srcPreview: null,
+      srcFile: null,
       visible: false,
       confirmLoading: false,
     }
@@ -19,12 +20,17 @@ class App extends React.Component {
       visible: true,
     });
   }
-
-  handleOk = () => {
+  
+  handleOk = async () => {
+    await this.child.current.onSubmit()
     this.setState({
-      src: 'hai',
       visible: false,
     });
+  }
+  handleSubmit = function(src){
+    this.setState({
+        src: src,
+    })
   }
 
   handleCancel = () => {
@@ -35,6 +41,13 @@ class App extends React.Component {
 
   deletePhoto = () => {
     this.child.current.deletePhoto()
+  }
+
+  handleGetImage = (file, base64) => {
+    this.setState({
+      srcPreview: base64,
+      srcFile: file,
+    });
   }
 
   render() {
@@ -49,10 +62,10 @@ class App extends React.Component {
 
     return (
       <div>
-        {!this.state.src && (<Button type="ghost" onClick={this.showModal} style={{color:'#00A5CF', border:'none'}}>Add Photo</Button>)}
-        {this.state.src && (
+        {!this.state.srcPreview && (<Button type="ghost" onClick={this.showModal} style={{color:'#00A5CF', border:'none'}}>Add Photo</Button>)}
+        {this.state.srcPreview && (
         <Button type="ghost" onClick={this.showModal} style={{color:'#00A5CF', width:120, height:66}}>
-          <img src={this.state.src} alt="uploaded"/>
+          <img src={this.state.srcPreview} alt="uploaded" style={{height:'90%',padding:2}}/>
         </Button>)}
         <Modal title="W:H 9:5 Photo"
           visible={visible}
@@ -62,7 +75,7 @@ class App extends React.Component {
           footer={footer}
         >
           <div style={{height: 340}}>
-            <UploadModal ref={this.child}/>
+            <UploadModal ref={this.child} passingImage={this.handleGetImage}/>
           </div>
         </Modal>
       </div>
